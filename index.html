@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>BAIDABOYS CHUG WHEEL</title>
+<style>
+  *{box-sizing:border-box} html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:#080008;font-family:Arial Black,Impact,Arial,sans-serif;color:white;touch-action:manipulation}
+  body{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#33001f 0%,#110010 45%,#000 100%)}
+  #brand{position:fixed;top:10px;right:12px;color:#fff;background:#d40000;padding:6px 12px;border-radius:10px;font-size:14px;letter-spacing:2px;z-index:20;box-shadow:0 0 18px #ff0000;text-shadow:0 0 8px #fff}
+  #app{width:100vw;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px;position:relative;overflow:hidden}
+  #wheelWrap{position:relative;width:min(92vw,58vh);height:min(92vw,58vh);display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 22px #ff0055)}
+  #wheel{width:100%;height:100%;border-radius:50%;border:8px solid #fff;box-shadow:0 0 25px #fff,0 0 55px #ff004c;position:relative;overflow:hidden;transition:transform 3s cubic-bezier(.08,.86,.13,1)}
+  .sliceName{position:absolute;left:50%;top:50%;width:48%;transform-origin:0 0;font-family:Arial,sans-serif;font-weight:900;font-size:clamp(7px,1.8vw,13px);text-align:right;padding-right:10px;text-shadow:1px 1px 3px #000;white-space:nowrap;color:white}
+  .arrow{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;z-index:10;filter:drop-shadow(0 0 8px #fff)}
+  .arrow.top{top:-20px;border-left:22px solid transparent;border-right:22px solid transparent;border-top:42px solid #fff}
+  .arrow.bottom{bottom:-20px;border-left:22px solid transparent;border-right:22px solid transparent;border-bottom:42px solid #fff}
+  #centerBtn{position:absolute;width:31%;height:31%;border-radius:50%;background:#111;border:5px solid #fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(16px,5vw,30px);color:#fff;text-shadow:0 0 12px #fff;box-shadow:0 0 28px #fff, inset 0 0 22px #ff004c;z-index:9;cursor:pointer;line-height:.95}
+  #result{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;z-index:15;padding:14px;background:rgba(0,0,0,.34)}
+  #result.show{display:flex;animation:shake .18s infinite}
+  #chug{font-size:clamp(54px,18vw,150px);line-height:.8;color:#fff;text-shadow:0 0 12px #fff,0 0 28px #ff0000,0 0 55px #ff0000;animation:pulse .22s infinite alternate}
+  #names{font-size:clamp(28px,9vw,80px);line-height:.95;margin-top:18px;color:#fff;text-transform:uppercase;text-shadow:0 0 14px #fff,0 0 28px #ffd000,0 0 55px #ff0000}
+  #again{display:none;position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:25;font-size:24px;font-weight:900;border:3px solid white;background:#d40000;color:#fff;border-radius:18px;padding:14px 24px;box-shadow:0 0 22px #fff,0 0 40px red;cursor:pointer}
+  .flash{animation:bgFlash .18s infinite}
+  canvas{position:fixed;inset:0;pointer-events:none;z-index:14}
+  @keyframes pulse{from{transform:scale(1)}to{transform:scale(1.12)}}
+  @keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(7px,-4px)}50%{transform:translate(-5px,6px)}75%{transform:translate(4px,5px)}100%{transform:translate(0,0)}}
+  @keyframes bgFlash{0%{background:#300}50%{background:#fff;color:#000}100%{background:#900}}
+  @media(max-height:650px){#wheelWrap{width:min(76vw,54vh);height:min(76vw,54vh)}#brand{font-size:11px;padding:5px 9px}.arrow.top{top:-14px}.arrow.bottom{bottom:-14px}}
+</style>
+</head>
+<body>
+<div id="brand">BAIDABOYS</div>
+<div id="app">
+  <div id="wheelWrap">
+    <div class="arrow top"></div>
+    <div id="wheel"></div>
+    <div id="centerBtn">TRYKK<br>START</div>
+    <div class="arrow bottom"></div>
+  </div>
+  <div id="result"><div id="chug">CHUGG!!!!</div><div id="names"></div></div>
+  <button id="again">SPIN PÅ NYTT</button>
+</div>
+<canvas id="confetti"></canvas>
+<audio id="song" src="song.mp4" preload="auto" playsinline></audio>
+<script>
+const names=["Alexander Nikolai Pedersen","Noah Mimon Jakobsen","Luckas Kuraas Eivik","Anders Hagen Gullbransen","Marius Kvensjø","Phillip Ingvart Akselsen","Fredrik Mikkelsen","Kasper Einås Eidum","Niklas Nilsen","Gabriel Clason","Luca Matheo Edvardsen","Matheo Fakking Mulitmilardær","Bartek Molinski","Mathias Eidisen","Dennis Sandvik","Henrik Ingebritsen","Tobias Harlund","Håvard Baustad","Omar Mballow","Leon Tretvoll","Casper Barosen","Magnus Sommerseth"];
+const wheel=document.getElementById('wheel'), result=document.getElementById('result'), namesBox=document.getElementById('names'), song=document.getElementById('song'), btn=document.getElementById('centerBtn'), again=document.getElementById('again');
+const n=names.length, seg=360/n; let spinning=false, currentRot=0;
+function buildWheel(){
+  const colors=['#ff004c','#ff8a00','#ffd000','#00c853','#00b0ff','#7c4dff','#ff00d4','#e60000'];
+  let gradient='conic-gradient(';
+  for(let i=0;i<n;i++){gradient+=`${colors[i%colors.length]} ${i*seg}deg ${(i+1)*seg}deg${i<n-1?',':''}`}
+  gradient+=')'; wheel.style.background=gradient;
+  wheel.innerHTML='';
+  names.forEach((name,i)=>{const d=document.createElement('div');d.className='sliceName';d.textContent=name.split(' ')[0];d.style.transform=`rotate(${i*seg+seg/2}deg) translate(-2px,-50%)`;wheel.appendChild(d);});
+}
+function norm(a){return ((a%360)+360)%360}
+function nameAtPointer(rot,pointerDeg){ const angle=norm(pointerDeg-rot); return Math.floor(angle/seg)%n; }
+function spin(){
+ if(spinning)return; spinning=true; again.style.display='none'; result.classList.remove('show'); document.body.classList.remove('flash'); btn.style.display='none';
+ song.currentTime=0; song.play().catch(()=>{});
+ const idxTop=Math.floor(Math.random()*n); let idxBottom; do{idxBottom=Math.floor(Math.random()*n)}while(idxBottom===idxTop);
+ // top pointer is 270deg in conic coords, bottom is 90deg
+ const targetTopCenter=idxTop*seg+seg/2; const neededRot=270-targetTopCenter;
+ const rounds=6; currentRot = rounds*360 + neededRot;
+ wheel.style.transition='transform 3s cubic-bezier(.08,.86,.13,1)'; wheel.style.transform=`rotate(${currentRot}deg)`;
+ setTimeout(()=>{
+   const topIdx=nameAtPointer(currentRot,270); const bottomIdx=nameAtPointer(currentRot,90);
+   let a=names[topIdx], b=names[bottomIdx]; if(a===b){b=names[(bottomIdx+1)%n];}
+   namesBox.innerHTML=`${a}<br><span style="font-size:.7em">&</span><br>${b}`;
+   result.classList.add('show'); document.body.classList.add('flash'); startConfetti(); vibrate();
+ },3000);
+ setTimeout(()=>{ document.body.classList.remove('flash'); result.classList.remove('show'); again.style.display='block'; spinning=false; stopConfetti(); },13000);
+}
+function vibrate(){ if(navigator.vibrate) navigator.vibrate([200,80,200,80,400,80,600]); }
+btn.onclick=spin; again.onclick=spin;
+buildWheel();
+// Confetti
+const c=document.getElementById('confetti'), ctx=c.getContext('2d'); let parts=[], confettiTimer;
+function resize(){c.width=innerWidth;c.height=innerHeight} addEventListener('resize',resize); resize();
+function startConfetti(){parts=[]; for(let i=0;i<180;i++){parts.push({x:Math.random()*c.width,y:-20-Math.random()*c.height,vx:(Math.random()-.5)*9,vy:Math.random()*7+4,s:Math.random()*8+4,r:Math.random()*360})} animateConfetti();}
+function animateConfetti(){ctx.clearRect(0,0,c.width,c.height); parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=12;if(p.y>c.height+20){p.y=-20;p.x=Math.random()*c.width}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.fillStyle=['#fff','#ffd000','#ff004c','#00e5ff','#00ff66'][Math.floor(Math.random()*5)];ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);ctx.restore();}); confettiTimer=requestAnimationFrame(animateConfetti)}
+function stopConfetti(){cancelAnimationFrame(confettiTimer);ctx.clearRect(0,0,c.width,c.height)}
+</script>
+</body>
+</html>
