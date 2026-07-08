@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>BAIDABOYS CHUG WHEEL V8</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#060006;color:#fff;font-family:Arial Black,Impact,Arial,sans-serif;touch-action:manipulation}
+  body{display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at center,#3d001f 0%,#130015 48%,#000 100%)}
+  #brand{position:fixed;top:10px;right:10px;z-index:40;background:#d40000;color:#fff;padding:7px 12px;border-radius:10px;font-size:clamp(11px,3.1vw,15px);letter-spacing:2px;box-shadow:0 0 18px #f00;text-shadow:0 0 8px #fff}
+  #app{width:100vw;height:100dvh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:6px}
+  #wheelWrap{position:relative;width:min(92vw,62vh);height:min(92vw,62vh);display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 24px #ff0055);transition:opacity .35s, transform .35s}
+  #wheel{width:100%;height:100%;border-radius:50%;border:7px solid #fff;box-shadow:0 0 25px #fff,0 0 65px #ff004c,inset 0 0 35px #000;position:relative;overflow:hidden;transition:transform 3s cubic-bezier(.08,.86,.13,1)}
+  .sliceName{position:absolute;left:50%;top:50%;width:47%;transform-origin:0 0;font-family:Arial,sans-serif;font-weight:900;font-size:clamp(7px,1.85vw,13px);text-align:right;padding-right:9px;text-shadow:1px 1px 3px #000;white-space:nowrap;color:#fff}
+  .arrow{position:absolute;left:50%;transform:translateX(-50%);width:0;height:0;z-index:12;filter:drop-shadow(0 0 10px #fff)}
+  .arrow.top{top:-15px;border-left:23px solid transparent;border-right:23px solid transparent;border-top:43px solid #fff}
+  .arrow.bottom{bottom:-15px;border-left:23px solid transparent;border-right:23px solid transparent;border-bottom:43px solid #fff}
+  #centerBtn{position:absolute;width:32%;height:32%;border-radius:50%;background:#111;border:5px solid #fff;display:flex;align-items:center;justify-content:center;text-align:center;font-size:clamp(16px,5vw,30px);color:#fff;text-shadow:0 0 12px #fff;box-shadow:0 0 28px #fff,inset 0 0 25px #ff004c;z-index:13;cursor:pointer;line-height:.95;animation:centerPulse .9s infinite alternate}
+  #result{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;z-index:30;padding:10px;background:rgba(0,0,0,.28)}
+  #result.show{display:flex;animation:shake .12s infinite}
+  #chug{font-size:clamp(54px,18vw,160px);line-height:.78;color:#fff;text-shadow:0 0 12px #fff,0 0 28px #ff0000,0 0 65px #ff0000;animation:megaPulse .16s infinite alternate;letter-spacing:1px}
+  #nameGrid{width:min(96vw,880px);display:flex;align-items:center;justify-content:center;gap:10px;margin-top:16px}
+  .nameCard{flex:1;min-width:0;background:linear-gradient(135deg,rgba(255,0,76,.92),rgba(255,140,0,.92));border:4px solid #fff;border-radius:22px;padding:13px 8px;box-shadow:0 0 22px #fff,0 0 42px #ff004c;text-transform:uppercase;font-size:clamp(20px,6.5vw,58px);line-height:.9;text-shadow:0 0 10px #000,0 0 18px #fff;animation:namePop .45s ease-out both, glowBox .25s infinite alternate;overflow:hidden}
+  #amp{font-size:clamp(34px,10vw,85px);text-shadow:0 0 20px #fff,0 0 40px #ffd000;animation:megaPulse .22s infinite alternate}
+  #beerRain{position:fixed;inset:0;pointer-events:none;z-index:28;display:none;overflow:hidden}
+  .beer{position:absolute;top:-40px;font-size:34px;animation:fall 2.2s linear infinite;text-shadow:0 0 10px #fff}
+  #again{display:none;position:fixed;bottom:18px;left:50%;transform:translateX(-50%);z-index:45;font-size:clamp(20px,6vw,30px);font-weight:900;border:3px solid white;background:#d40000;color:#fff;border-radius:18px;padding:13px 24px;box-shadow:0 0 22px #fff,0 0 40px red;cursor:pointer}
+  .flash{animation:bgFlash .12s infinite}
+  .laser:before,.laser:after{content:"";position:fixed;left:-20vw;top:50%;width:140vw;height:8px;background:#fff;box-shadow:0 0 18px #fff,0 0 55px #ff004c;z-index:25;pointer-events:none;opacity:.8;animation:laserMove .35s infinite alternate}
+  .laser:before{transform:rotate(24deg)} .laser:after{transform:rotate(-24deg);animation-delay:.12s}
+  canvas{position:fixed;inset:0;pointer-events:none;z-index:26}
+  @keyframes centerPulse{from{transform:scale(1)}to{transform:scale(1.07)}}
+  @keyframes megaPulse{from{transform:scale(1) rotate(-1deg)}to{transform:scale(1.14) rotate(1deg)}}
+  @keyframes namePop{0%{transform:scale(.3) rotate(-8deg);opacity:0}70%{transform:scale(1.12) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0)}}
+  @keyframes glowBox{from{box-shadow:0 0 14px #fff,0 0 35px #ff004c}to{box-shadow:0 0 28px #fff,0 0 75px #ffd000}}
+  @keyframes shake{0%{transform:translate(0,0)}20%{transform:translate(9px,-6px)}40%{transform:translate(-8px,7px)}60%{transform:translate(6px,8px)}80%{transform:translate(-5px,-7px)}100%{transform:translate(0,0)}}
+  @keyframes bgFlash{0%{background:#3b0000}35%{background:#fff;color:#000}70%{background:#9b0000}100%{background:#000}}
+  @keyframes laserMove{from{top:36%;opacity:.55}to{top:66%;opacity:1}}
+  @keyframes fall{to{transform:translateY(115vh) rotate(360deg)}}
+  @media(max-width:520px){#nameGrid{flex-direction:column;gap:6px}.nameCard{width:96vw;flex:none;padding:10px 8px}#amp{line-height:.7}#wheelWrap{width:min(92vw,55vh);height:min(92vw,55vh)}}
+  @media(max-height:660px){#wheelWrap{width:min(80vw,54vh);height:min(80vw,54vh)}#chug{font-size:clamp(44px,15vw,115px)}.nameCard{font-size:clamp(18px,5.2vw,42px);padding:9px 7px}#nameGrid{margin-top:8px}#brand{font-size:11px;padding:5px 9px}}
+</style>
+</head>
+<body>
+<div id="brand">BAIDABOYS</div>
+<div id="app">
+  <div id="wheelWrap">
+    <div class="arrow top"></div>
+    <div id="wheel"></div>
+    <div id="centerBtn">TRYKK<br>START</div>
+    <div class="arrow bottom"></div>
+  </div>
+  <div id="result"><div id="chug">CHUGG!!!!</div><div id="nameGrid"><div class="nameCard" id="nameA"></div><div id="amp">&</div><div class="nameCard" id="nameB"></div></div></div>
+  <button id="again">SPIN PÅ NYTT</button>
+</div>
+<div id="beerRain"></div>
+<canvas id="confetti"></canvas>
+<audio id="song" src="song.mp4" preload="auto" playsinline></audio>
+<script>
+const names=["Alexander Nikolai Pedersen","Noah Mimon Jakobsen","Luckas Kuraas Eivik","Anders Hagen Gullbransen","Marius Kvensjø","Phillip Ingvart Akselsen","Fredrik Mikkelsen","Kasper Einås Eidum","Niklas Nilsen","Gabriel Clason","Luca Matheo Edvardsen","Matheo Fakking Mulitmilardær","Bartek Molinski","Mathias Eidisen","Dennis Sandvik","Henrik Ingebritsen","Tobias Harlund","Håvard Baustad","Omar Mballow","Leon Tretvoll","Casper Barosen","Magnus Sommerseth"];
+const wheel=document.getElementById('wheel'), wheelWrap=document.getElementById('wheelWrap'), result=document.getElementById('result'), nameA=document.getElementById('nameA'), nameB=document.getElementById('nameB'), song=document.getElementById('song'), btn=document.getElementById('centerBtn'), again=document.getElementById('again'), beerRain=document.getElementById('beerRain');
+const n=names.length, seg=360/n; let spinning=false, currentRot=0;
+function buildWheel(){
+ const colors=['#ff004c','#ff8a00','#ffd000','#00c853','#00b0ff','#7c4dff','#ff00d4','#e60000'];
+ wheel.style.background='conic-gradient('+Array.from({length:n},(_,i)=>`${colors[i%colors.length]} ${i*seg}deg ${(i+1)*seg}deg`).join(',')+')';
+ wheel.innerHTML=''; names.forEach((name,i)=>{const d=document.createElement('div');d.className='sliceName';d.textContent=name.split(' ')[0];d.style.transform=`rotate(${i*seg+seg/2}deg) translate(-2px,-50%)`;wheel.appendChild(d);});
+}
+function norm(a){return ((a%360)+360)%360}
+function nameAtPointer(rot,pointerDeg){const angle=norm(pointerDeg-rot);return Math.floor(angle/seg)%n}
+function spin(){
+ if(spinning)return; spinning=true; again.style.display='none'; result.classList.remove('show'); document.body.className=''; beerRain.style.display='none'; btn.style.display='none'; wheelWrap.style.opacity='1'; wheelWrap.style.transform='scale(1)'; stopConfetti();
+ song.currentTime=0; song.play().catch(()=>{});
+ const idxTop=Math.floor(Math.random()*n); const targetTopCenter=idxTop*seg+seg/2; const neededRot=270-targetTopCenter; const rounds=9;
+ currentRot=rounds*360+neededRot; wheel.style.transition='transform 3s cubic-bezier(.05,.9,.08,1)'; wheel.style.transform=`rotate(${currentRot}deg)`;
+ setTimeout(()=>{
+   let topIdx=nameAtPointer(currentRot,270), bottomIdx=nameAtPointer(currentRot,90); if(topIdx===bottomIdx) bottomIdx=(bottomIdx+Math.floor(n/2))%n;
+   nameA.textContent=names[topIdx]; nameB.textContent=names[bottomIdx];
+   result.classList.add('show'); document.body.classList.add('flash','laser'); wheelWrap.style.opacity='.2'; wheelWrap.style.transform='scale(.86)'; startConfetti(); startBeerRain(); vibrate();
+ },3000);
+ setTimeout(()=>{document.body.className=''; result.classList.remove('show'); beerRain.style.display='none'; wheelWrap.style.opacity='1'; wheelWrap.style.transform='scale(1)'; again.style.display='block'; spinning=false; stopConfetti(); song.pause(); song.currentTime=0;},13000);
+}
+function startBeerRain(){beerRain.innerHTML='';beerRain.style.display='block';for(let i=0;i<42;i++){const b=document.createElement('div');b.className='beer';b.textContent=['🍺','🍻','🔥','💥'][i%4];b.style.left=Math.random()*100+'vw';b.style.animationDelay=(Math.random()*1.8)+'s';b.style.animationDuration=(1.4+Math.random()*1.7)+'s';beerRain.appendChild(b)}}
+function vibrate(){if(navigator.vibrate)navigator.vibrate([180,60,180,60,400,70,700,60,400])}
+btn.onclick=spin; again.onclick=spin; buildWheel();
+const c=document.getElementById('confetti'),ctx=c.getContext('2d');let parts=[],confettiTimer;
+function resize(){c.width=innerWidth;c.height=innerHeight}addEventListener('resize',resize);resize();
+function startConfetti(){parts=[];for(let i=0;i<320;i++){parts.push({x:Math.random()*c.width,y:-30-Math.random()*c.height,vx:(Math.random()-.5)*12,vy:Math.random()*9+5,s:Math.random()*10+5,r:Math.random()*360,color:['#fff','#ffd000','#ff004c','#00e5ff','#00ff66','#ff8a00'][Math.floor(Math.random()*6)]})}animateConfetti()}
+function animateConfetti(){ctx.clearRect(0,0,c.width,c.height);parts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.r+=16;if(p.y>c.height+25){p.y=-25;p.x=Math.random()*c.width}ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r*Math.PI/180);ctx.fillStyle=p.color;ctx.fillRect(-p.s/2,-p.s/2,p.s,p.s);ctx.restore()});confettiTimer=requestAnimationFrame(animateConfetti)}
+function stopConfetti(){cancelAnimationFrame(confettiTimer);ctx.clearRect(0,0,c.width,c.height)}
+</script>
+</body>
+</html>
